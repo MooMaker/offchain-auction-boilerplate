@@ -1,3 +1,8 @@
-fn main() {
-    println!("Hello, world!");
+mod api;
+mod models;
+
+#[tokio::main]
+async fn main() {
+    api::init().await;
 }
+
