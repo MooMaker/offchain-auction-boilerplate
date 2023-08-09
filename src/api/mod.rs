@@ -3,9 +3,10 @@ use axum::{
     Router,
 };
 use std::net::SocketAddr;
+use crate::config::Config;
 
 mod handlers;
-pub async fn init() {
+pub async fn init(config: &Config) {
     // initialize tracing
     tracing_subscriber::fmt::init();
 
@@ -13,7 +14,7 @@ pub async fn init() {
     let app = Router::new()
         .route("/api/orders", post(handlers::orders::create_order));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr: SocketAddr = config.api_bind_address.parse().unwrap();
     tracing::debug!("listening on {}", addr);
 
     axum::Server::bind(&addr)

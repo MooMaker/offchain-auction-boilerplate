@@ -1,8 +1,11 @@
+mod config;
 mod api;
 mod models;
 
 #[tokio::main]
 async fn main() {
-    api::init().await;
+    let config = config::init();
+
+    api::init(&config).await;
 }
 
