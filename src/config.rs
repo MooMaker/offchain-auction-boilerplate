@@ -3,7 +3,8 @@ use serde::{Deserialize};
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    pub api_bind_address: String
+    pub api_bind_address: String,
+    pub redis_hostname: String,
 }
 
 pub fn init() -> Config {

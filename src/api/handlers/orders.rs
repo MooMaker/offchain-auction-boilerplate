@@ -1,16 +1,26 @@
+use std::sync::{Arc, RwLock};
 use axum::{
     http::StatusCode,
     response::IntoResponse,
-    Json
+    Json,
+    extract::{State},
 };
+use redis::RedisError;
 use crate::models::Order;
+use crate::state::DB;
 
 type CreateOrder = Order;
-pub async fn create_order(Json(payload): Json<CreateOrder>) -> impl IntoResponse {
-    // insert your application logic here
+pub async fn create_order(State(state): State<Arc<RwLock<DB>>>, Json(payload): Json<CreateOrder>) -> impl IntoResponse
+{
     let order = payload as Order;
 
-    // this will be converted into a JSON response
-    // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(order))
+    let result = state.write().unwrap().create_rqf();
+
+    match result {
+        Ok(_) => (StatusCode::CREATED, Json(order)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to place order: {}", e.to_string()
+        )).into_response()
+    }
 }
