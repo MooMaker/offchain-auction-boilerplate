@@ -1,10 +1,13 @@
 use std::fmt::{Debug, Formatter, Error};
 use redis::{Commands, RedisError};
 use crate::config::Config;
+use crate::models::RFQ;
 
 pub struct DB {
     connection: redis::Connection,
 }
+pub const TABLE_RFQS: &str = "rfqs";
+pub const SEPARATOR: &str = ":";
 
 impl DB {
     pub fn new(config: &Config) -> Self {
@@ -20,9 +23,15 @@ impl DB {
         }
     }
 
-    pub fn create_rqf(&mut self) -> Result<(), RedisError> {
-        let _:() = self.connection.set("foo", "bar")?;
-        let bar: String = self.connection.get("foo")?;
+    pub fn create_rqf(&mut self, rfq: &RFQ) -> Result<(), RedisError> {
+        let id = &rfq.id;
+
+        let value = serde_json::to_string(rfq).unwrap();
+
+        let key = format!("{}{}{}", TABLE_RFQS, SEPARATOR, id);
+
+        let _:() = self.connection.set(&key, value)?;
+        let _:() = self.connection.expire(key, rfq.time_limit as usize)?;
         Ok(())
     }
 }

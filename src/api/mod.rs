@@ -19,7 +19,7 @@ pub async fn init(config: &Config, state: Arc<RwLock<DB>>)
 
     // build our application with a route
     let app = Router::new()
-        .route("/api/orders", post(handlers::orders::create_order))
+        .route("/api/orders", post(handlers::orders::place_order))
         .with_state(state);
 
     let addr: SocketAddr = config.api_bind_address.parse().unwrap();

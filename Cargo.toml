@@ -15,3 +15,4 @@ tracing = "0.1"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 redis = { version = "0.23.1", features = ["tokio-comp"] }
+uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
