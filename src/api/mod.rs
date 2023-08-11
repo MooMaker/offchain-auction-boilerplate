@@ -1,11 +1,9 @@
-use std::collections::HashMap;
 use axum::{
     routing::{post},
     Router,
 };
 use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
-use axum::response::IntoResponse;
 use crate::config::Config;
 use crate::state::{DB};
 

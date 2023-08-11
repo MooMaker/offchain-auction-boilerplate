@@ -1,4 +1,3 @@
-use std::fmt::{Debug, Formatter, Error};
 use redis::{Commands, RedisError};
 use crate::config::Config;
 use crate::models::RFQ;

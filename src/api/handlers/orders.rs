@@ -6,7 +6,6 @@ use axum::{
     Json,
     extract::{State},
 };
-use redis::RedisError;
 use crate::models::{RFQ, TimeLimit};
 use crate::state::DB;
 
