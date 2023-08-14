@@ -11,8 +11,8 @@ use db::DB;
 async fn main() {
     let config = config::init();
 
-    let state = Arc::new(RwLock::new(DB::new(&config)));
+    let db = Arc::new(RwLock::new(DB::new(&config)));
 
-    api::init(&config, Arc::clone(&state)).await;
+    api::init(&config, Arc::clone(&db)).await;
 }
 
