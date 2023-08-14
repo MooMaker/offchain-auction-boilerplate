@@ -1,4 +1,4 @@
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc};
 use serde::{Deserialize};
 use axum::{
     http::StatusCode,
@@ -6,8 +6,10 @@ use axum::{
     Json,
     extract::{State},
 };
+use axum::extract::ws::Message;
+use futures::SinkExt;
+use crate::api::Context;
 use crate::models::{RFQ, TimeLimit};
-use crate::state::DB;
 
 #[derive(Deserialize)]
 pub struct Order {
@@ -18,7 +20,7 @@ pub struct Order {
     pub time_limit: TimeLimit
 }
 
-pub async fn place_order(State(state): State<Arc<RwLock<DB>>>, Json(payload): Json<Order>) -> impl IntoResponse
+pub async fn place_order(State(state): State<Arc<Context>>, Json(payload): Json<Order>) -> impl IntoResponse
 {
     // Generate RFQ id
     let rfq_id = uuid::Uuid::new_v4();
@@ -33,13 +35,22 @@ pub async fn place_order(State(state): State<Arc<RwLock<DB>>>, Json(payload): Js
         time_limit: payload.time_limit
     };
 
-    let result = state.write().unwrap().create_rqf(&rfq);
-
-    match result {
-        Ok(_) => (StatusCode::CREATED, Json(rfq)).into_response(),
-        Err(e) => (
+    // Write RFQ to DB
+    let result = state.db.write().unwrap().create_rqf(&rfq);
+    if let Err(e) = result {
+        return (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Failed to place order: {}", e.to_string()
-        )).into_response()
+            format!("Failed to place order: {}", e.to_string())
+        ).into_response();
     }
+
+    // Notify makers over websocket
+    let mut makers = state.makers.lock().await;
+    for maker in makers.values_mut() {
+        println!("Sending RFQ {} to maker", rfq.id);
+        let _ = maker.send(Message::Text(format!("RFQ {} created", rfq.id))).await;
+    }
+
+    // Return RFQ
+    (StatusCode::CREATED, Json(rfq)).into_response()
 }

@@ -1,11 +1,11 @@
 mod config;
-mod state;
+mod db;
 mod api;
 mod models;
 
 use std::sync::{Arc, RwLock};
 
-use state::DB;
+use db::DB;
 
 #[tokio::main]
 async fn main() {
