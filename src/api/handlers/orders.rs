@@ -6,6 +6,7 @@ use axum::{
     Json,
     extract::{State},
 };
+use axum::extract::Path;
 use axum::extract::ws::Message;
 use futures::SinkExt;
 use crate::api::Context;
@@ -20,7 +21,17 @@ pub struct Order {
     pub time_limit: TimeLimit
 }
 
-pub async fn place_order(State(state): State<Arc<Context>>, Json(payload): Json<Order>) -> impl IntoResponse
+pub async fn get(State(state): State<Arc<Context>>, Path(id): Path<String>) -> impl IntoResponse {
+    let result = state.db.write().unwrap().get_rfq(id.as_str()).unwrap();
+
+    println!("RFQ: {:?}", result);
+
+    result.map_or_else(|| (StatusCode::NOT_FOUND, "RFQ not found".to_string()).into_response(),
+        |rfq| (StatusCode::OK, Json(rfq)).into_response()
+    )
+}
+
+pub async fn create(State(state): State<Arc<Context>>, Json(payload): Json<Order>) -> impl IntoResponse
 {
     // Generate RFQ id
     let rfq_id = uuid::Uuid::new_v4();

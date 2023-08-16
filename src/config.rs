@@ -7,6 +7,15 @@ pub struct Config {
     pub redis_hostname: String,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            api_bind_address: "localhost:3000".to_string(),
+            redis_hostname: "localhost:6379".to_string(),
+        }
+    }
+}
+
 pub fn init() -> Config {
     dotenv().ok();
 

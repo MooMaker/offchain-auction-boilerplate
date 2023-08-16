@@ -1,6 +1,6 @@
 mod config;
 mod db;
-mod api;
+pub mod api;
 mod models;
 
 use std::sync::{Arc, RwLock};

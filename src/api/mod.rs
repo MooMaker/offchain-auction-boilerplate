@@ -21,16 +21,7 @@ pub async fn init(config: &Config, db: Arc<RwLock<DB>>)
     // initialize tracing
     tracing_subscriber::fmt::init();
 
-    let state = Arc::new(Context {
-        db,
-        makers: Mutex::new(HashMap::new())
-    });
-
-    // build our application with a route
-    let app = Router::new()
-        .route("/api/orders", post(handlers::orders::place_order))
-        .route("/ws", get(handlers::ws::ws_handler))
-        .with_state(state);
+    let app = app(db);
 
     let addr: SocketAddr = config.api_bind_address.parse().unwrap();
     tracing::debug!("listening on {}", addr);
@@ -39,4 +30,18 @@ pub async fn init(config: &Config, db: Arc<RwLock<DB>>)
         .serve(app.into_make_service_with_connect_info::<SocketAddr>())
         .await
         .unwrap();
+}
+
+pub fn app(db: Arc<RwLock<DB>>) -> Router {
+    let state = Arc::new(Context {
+        db,
+        makers: Mutex::new(HashMap::new())
+    });
+
+    // build our application with a route
+    Router::new()
+        .route("/api/orders", post(handlers::orders::create))
+        .route("/api/orders/:id",get(handlers::orders::get))
+        .route("/ws", get(handlers::ws::ws_handler))
+        .with_state(state)
 }

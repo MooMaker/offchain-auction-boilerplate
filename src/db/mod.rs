@@ -33,4 +33,13 @@ impl DB {
         let _:() = self.connection.expire(key, rfq.time_limit as usize)?;
         Ok(())
     }
+
+    pub fn get_rfq(&mut self, id: &str) -> Result<Option<RFQ>, RedisError> {
+        let key = format!("{}{}{}", TABLE_RFQS, SEPARATOR, id);
+        let value: Option<String> = self.connection.get(&key)?;
+
+        Ok(value
+            .map(|v| serde_json::from_str(&v).unwrap())
+        )
+    }
 }
