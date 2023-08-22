@@ -1,6 +1,5 @@
 use std::net::SocketAddr;
 use std::ops::ControlFlow;
-use std::sync::Arc;
 use axum::{response::IntoResponse, extract::{
     ws::{WebSocketUpgrade}
 }, TypedHeader, headers};
@@ -10,7 +9,7 @@ use futures::{stream::StreamExt};
 use crate::api::Context;
 
 pub async fn ws_handler(
-    state: State<Arc<Context>>,
+    state: State<Context>,
     ws: WebSocketUpgrade,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>
@@ -28,7 +27,7 @@ pub async fn ws_handler(
     ws.on_upgrade(move |socket| handle_socket(socket, addr, state))
 }
 
-async fn handle_socket(mut socket: WebSocket, who: SocketAddr, State(state): State<Arc<Context>>) {
+async fn handle_socket(mut socket: WebSocket, who: SocketAddr, State(state): State<Context>) {
     //send a ping just to kick things off and get a response
     if socket.send(Message::Ping(vec![1, 2, 3])).await.is_ok() {
         println!("Pinged {}...", who);

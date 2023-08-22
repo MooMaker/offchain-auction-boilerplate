@@ -1,4 +1,3 @@
-use std::sync::{Arc};
 use serde::{Deserialize};
 use axum::{
     http::StatusCode,
@@ -21,9 +20,8 @@ pub struct Order {
     pub time_limit: TimeLimit
 }
 
-pub async fn get(State(state): State<Arc<Context>>, Path(id): Path<String>) -> impl IntoResponse {
-    let result = state.db.write().unwrap().get_rfq(id.as_str()).unwrap();
-
+pub async fn get(State(mut state): State<Context>, Path(id): Path<String>) -> impl IntoResponse {
+    let result = state.db.get_rfq(id.as_str()).await.unwrap();
     println!("RFQ: {:?}", result);
 
     result.map_or_else(|| (StatusCode::NOT_FOUND, "RFQ not found".to_string()).into_response(),
@@ -31,7 +29,7 @@ pub async fn get(State(state): State<Arc<Context>>, Path(id): Path<String>) -> i
     )
 }
 
-pub async fn create(State(state): State<Arc<Context>>, Json(payload): Json<Order>) -> impl IntoResponse
+pub async fn create(State(mut state): State<Context>, Json(payload): Json<Order>) -> impl IntoResponse
 {
     // Generate RFQ id
     let rfq_id = uuid::Uuid::new_v4();
@@ -47,7 +45,7 @@ pub async fn create(State(state): State<Arc<Context>>, Json(payload): Json<Order
     };
 
     // Write RFQ to DB
-    let result = state.db.write().unwrap().create_rqf(&rfq);
+    let result = state.db.create_rqf(&rfq).await;
     if let Err(e) = result {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,

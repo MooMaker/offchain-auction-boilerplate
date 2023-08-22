@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use axum::{routing::{post}, Router};
 use std::net::SocketAddr;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc};
 use axum::extract::ws::{Message, WebSocket};
 use axum::routing::get;
 use futures::stream::SplitSink;
@@ -11,12 +11,13 @@ use crate::db::{DB};
 
 mod handlers;
 
+#[derive(Clone)]
 pub struct Context {
-    db: Arc<RwLock<DB>>,
-    makers: Mutex<HashMap<String, SplitSink<WebSocket, Message>>>
+    db: DB,
+    makers: Arc<Mutex<HashMap<String, SplitSink<WebSocket, Message>>>>
 }
 
-pub async fn init(config: &Config, db: Arc<RwLock<DB>>)
+pub async fn init(config: &Config, db: DB)
 {
     // initialize tracing
     tracing_subscriber::fmt::init();
@@ -32,11 +33,11 @@ pub async fn init(config: &Config, db: Arc<RwLock<DB>>)
         .unwrap();
 }
 
-pub fn app(db: Arc<RwLock<DB>>) -> Router {
-    let state = Arc::new(Context {
+pub fn app(db: DB) -> Router {
+    let state = Context {
         db,
-        makers: Mutex::new(HashMap::new())
-    });
+        makers: Arc::new(Mutex::new(HashMap::new()))
+    };
 
     // build our application with a route
     Router::new()

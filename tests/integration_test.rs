@@ -15,7 +15,7 @@ use offchain_auction::models::RFQ;
 async fn it_creates_rfq_when_order_is_placed() {
     let config = Config::default();
 
-    let db = Arc::new(RwLock::new(DB::new(&config)));
+    let db = DB::new(&config).await;
 
     let mut app = app(db);
 
