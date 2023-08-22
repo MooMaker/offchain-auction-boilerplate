@@ -1,9 +1,7 @@
 mod config;
 mod db;
-mod api;
+pub mod api;
 mod models;
-
-use std::sync::{Arc, RwLock};
 
 use db::DB;
 
@@ -11,8 +9,8 @@ use db::DB;
 async fn main() {
     let config = config::init();
 
-    let db = Arc::new(RwLock::new(DB::new(&config)));
+    let db = DB::new(&config).await;
 
-    api::init(&config, Arc::clone(&db)).await;
+    api::init(&config, db).await;
 }
 

@@ -1,4 +1,3 @@
-use std::sync::{Arc};
 use serde::{Deserialize};
 use axum::{
     http::StatusCode,
@@ -6,6 +5,7 @@ use axum::{
     Json,
     extract::{State},
 };
+use axum::extract::Path;
 use axum::extract::ws::Message;
 use futures::SinkExt;
 use crate::api::Context;
@@ -20,7 +20,16 @@ pub struct Order {
     pub time_limit: TimeLimit
 }
 
-pub async fn place_order(State(state): State<Arc<Context>>, Json(payload): Json<Order>) -> impl IntoResponse
+pub async fn get(State(mut state): State<Context>, Path(id): Path<String>) -> impl IntoResponse {
+    let result = state.db.get_rfq(id.as_str()).await.unwrap();
+    println!("RFQ: {:?}", result);
+
+    result.map_or_else(|| (StatusCode::NOT_FOUND, "RFQ not found".to_string()).into_response(),
+        |rfq| (StatusCode::OK, Json(rfq)).into_response()
+    )
+}
+
+pub async fn create(State(mut state): State<Context>, Json(payload): Json<Order>) -> impl IntoResponse
 {
     // Generate RFQ id
     let rfq_id = uuid::Uuid::new_v4();
@@ -36,7 +45,7 @@ pub async fn place_order(State(state): State<Arc<Context>>, Json(payload): Json<
     };
 
     // Write RFQ to DB
-    let result = state.db.write().unwrap().create_rqf(&rfq);
+    let result = state.db.create_rqf(&rfq).await;
     if let Err(e) = result {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,

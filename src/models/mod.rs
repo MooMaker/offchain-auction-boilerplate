@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 pub type TimeLimit = u16;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RFQ {
     pub id: String,
     pub sell_token: String,
